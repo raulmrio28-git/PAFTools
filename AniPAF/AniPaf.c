@@ -6,7 +6,7 @@
 #include <memory.h>
 #include "AniPAF.h"
 
-#define		DBGPRINT(Error, String)		printf("[E%04d] %s(%d) : %s", Error, __FILE__, __LINE__, String)
+#define		DBGPRINT(Error, String)		printf_s("[E%04d] %s(%d) : %s", Error, __FILE__, __LINE__, String)
 
 QUAD swap_uint32(QUAD val)
 {
@@ -585,7 +585,6 @@ BOOL		AniPaf_Init(TAniPaf *PAFStruct, T_CSTR pcszFileName, QUAD Style, T_POS X, 
 	while (TempFrameNum <= PAFStruct->FrameNum)
 	{
 		fread((void*)&TempOffset, 4, 1, (FILE*)PAFStruct->hFile);
-		printf("%d\n", TempFrameNum);
 		PAFStruct->pFrameOffset[TempFrameNum++] = swap_uint32(TempOffset);
 	}
 	switch (PAFStruct->CurrentImageColorBit)
