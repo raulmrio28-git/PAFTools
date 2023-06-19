@@ -197,6 +197,7 @@ BYTE*		AniPaf_Decode8BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 	QUAD nCurrSize = 0;
 	BYTE cTempVal, cPix;
 	QUAD nCount = 0;
+	QUAD nOutSize = 0;
 	while (nCurrSize < nInSize)
 	{
 		cTempVal = *pInBuffer; //curr byte
@@ -228,18 +229,19 @@ BYTE*		AniPaf_Decode8BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			}
 			while (nCount--)
 			{
-				pResBuffer[*pnOutSize++] ^= cPix;
+				pResBuffer[nOutSize++] ^= cPix;
 			}
 		}
 		else //Nope, treat it as pixel
 		{
 			cPix = *pInBuffer;
-			pResBuffer[*pnOutSize++] ^= cPix;
+			pResBuffer[nOutSize++] ^= cPix;
 			pInBuffer++;
 			nCurrSize++;
 		}
 
 	}
+	*pnOutSize = nOutSize;
 	return pResBuffer;
 }
 
@@ -308,6 +310,7 @@ BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 	QUAD nCurrSize = 0;
 	BYTE cTempVal, cPix1, cPix2, cPix3;
 	QUAD nCount = 0;
+	QUAD nOutSize = 0;
 	while (nCurrSize < nInSize)
 	{
 		cTempVal = *pInBuffer; //curr byte
@@ -345,9 +348,9 @@ BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 			}
 			while (nCount-- != 0)
 			{
-				pResBuffer[*pnOutSize++] ^= cPix1;
-				pResBuffer[*pnOutSize++] ^= cPix2;
-				pResBuffer[*pnOutSize++] ^= cPix3;
+				pResBuffer[nOutSize++] ^= cPix1;
+				pResBuffer[nOutSize++] ^= cPix2;
+				pResBuffer[nOutSize++] ^= cPix3;
 			}
 		}
 		else //Nope, treat it as pixel
@@ -355,15 +358,16 @@ BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 			cPix1 = *pInBuffer;
 			cPix2 = pInBuffer[1];
 			cPix3 = pInBuffer[2];
-			pResBuffer[*pnOutSize++] ^= cPix1;
-			pResBuffer[*pnOutSize++] ^= cPix2;
-			pResBuffer[*pnOutSize++] ^= cPix3;
+			pResBuffer[nOutSize++] ^= cPix1;
+			pResBuffer[nOutSize++] ^= cPix2;
+			pResBuffer[nOutSize++] ^= cPix3;
 			pResBuffer += 3;
 			pInBuffer += 3;
 			nCurrSize += 3;
 		}
 
 	}
+	*pnOutSize = nOutSize;
 	return pResBuffer;
 }
 
@@ -372,6 +376,7 @@ BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 	QUAD nCurrSize = 0;
 	BYTE cTempVal, cPix1, cPix2, cPix3, cPix4;
 	QUAD nCount = 0;
+	QUAD nOutSize = 0;
 	while (nCurrSize < nInSize)
 	{
 		cTempVal = *pInBuffer; //curr byte
@@ -412,10 +417,10 @@ BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 			}
 			while (nCount-- != 0)
 			{
-				pResBuffer[*pnOutSize++] ^= cPix1;
-				pResBuffer[*pnOutSize++] ^= cPix2;
-				pResBuffer[*pnOutSize++] ^= cPix3;
-				pResBuffer[*pnOutSize++] ^= cPix4;
+				pResBuffer[nOutSize++] ^= cPix1;
+				pResBuffer[nOutSize++] ^= cPix2;
+				pResBuffer[nOutSize++] ^= cPix3;
+				pResBuffer[nOutSize++] ^= cPix4;
 			}
 		}
 		else //Nope, treat it as pixel
@@ -424,15 +429,16 @@ BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 			cPix2 = pInBuffer[1];
 			cPix3 = pInBuffer[2];
 			cPix4 = pInBuffer[3];
-			pResBuffer[*pnOutSize++] ^= cPix1;
-			pResBuffer[*pnOutSize++] ^= cPix2;
-			pResBuffer[*pnOutSize++] ^= cPix3;
-			pResBuffer[*pnOutSize++] ^= cPix4;
+			pResBuffer[nOutSize++] ^= cPix1;
+			pResBuffer[nOutSize++] ^= cPix2;
+			pResBuffer[nOutSize++] ^= cPix3;
+			pResBuffer[nOutSize++] ^= cPix4;
 			pInBuffer += 4;
 			nCurrSize += 4;
 		}
 
 	}
+	*pnOutSize = nOutSize;
 	return pResBuffer;
 }
 
