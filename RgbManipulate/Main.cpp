@@ -328,6 +328,14 @@ BOOL ConvertBufferToARGB32(BYTE *pBuff, QUAD *pOutBuff, QUAD nWidth, QUAD nHeigh
 			}
 		}
 	}
+	else if (nBPP == 18) {
+		for (y = 0; y < nHeight; y++) {
+			for (x = 0; x < nWidth; x++) {
+				QUAD val = pBuff[4 * (y * nWidth + x)] | pBuff[(4 * (y * nWidth + x)) + 1] << 8 | pBuff[(4 * (y * nWidth + x)) + 2] << 16 | pBuff[(4 * (y * nWidth + x)) + 3] << 24;
+				pOutBuff[y * nWidth + x] = ((val >> 14) & 0x3f) << 2 | ((val >> 20) & 0x3f) << 10 | ((val>>26) & 0x3f) << 18 | 0xff000000;
+			}
+		}
+	}
 	else if (nBPP == 24) {
 		for (y = 0; y < nHeight; y++) {
 			for (x = 0; x < nWidth; x++) {
