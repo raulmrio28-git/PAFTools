@@ -206,14 +206,14 @@ BYTE*		AniPaf_Decode8BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			{
 				if (cTempVal & 0x10) //Count is over 4095
 				{
-					nCount = pInBuffer[2] | (pInBuffer[1] << 8) | ((cTempVal << 16) & 0xFFFFF);
+					nCount = pInBuffer[2] | (pInBuffer[1] << 8) | ((cTempVal & 0xf) << 16);
 					cPix = pInBuffer[3];
 					pInBuffer += 4;
 					nCurrSize += 4;
 				}
 				else //Nope, count's between 33-4095
 				{
-					nCount = pInBuffer[1] | ((cTempVal << 8) & 0xFFF);
+					nCount = pInBuffer[1] | ((cTempVal & 0xf) << 8);
 					cPix = pInBuffer[2];
 					pInBuffer += 3;
 					nCurrSize += 3;
@@ -317,7 +317,7 @@ BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 			{
 				if (cTempVal & 0x10) //Count is over 4095
 				{
-					nCount = pInBuffer[2] + (pInBuffer[1] << 8) + ((cTempVal << 16) & 0xFFFFF);
+					nCount = pInBuffer[2] + (pInBuffer[1] << 8) + ((cTempVal & 0xf) << 16);
 					cPix1 = pInBuffer[3];
 					cPix2 = pInBuffer[4];
 					cPix3 = pInBuffer[5];
@@ -326,7 +326,7 @@ BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 				}
 				else //Nope, count's between 33-4095
 				{
-					nCount = pInBuffer[1] + ((cTempVal << 8) & 0xFFF);
+					nCount = pInBuffer[1] + ((cTempVal & 0xf) << 8);
 					cPix1 = pInBuffer[2];
 					cPix2 = pInBuffer[3];
 					cPix3 = pInBuffer[4];
@@ -381,7 +381,7 @@ BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 			{
 				if (cTempVal & 0x10) //Count is over 4095
 				{
-					nCount = pInBuffer[2] + (pInBuffer[1] << 8) + ((cTempVal << 16) & 0xFFFFF);
+					nCount = pInBuffer[2] + (pInBuffer[1] << 8) + ((cTempVal & 0xf) << 16);
 					cPix1 = pInBuffer[3];
 					cPix2 = pInBuffer[4];
 					cPix3 = pInBuffer[5];
@@ -391,7 +391,7 @@ BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 				}
 				else //Nope, count's between 33-4095
 				{
-					nCount = pInBuffer[1] + ((cTempVal << 8) & 0xFFF);
+					nCount = pInBuffer[1] + ((cTempVal & 0xf) << 8);
 					cPix1 = pInBuffer[2];
 					cPix2 = pInBuffer[3];
 					cPix3 = pInBuffer[4];
