@@ -573,7 +573,7 @@ BOOL		AniPaf_Init(TAniPaf *PAFStruct, T_CSTR pcszFileName, QUAD Style, T_POS X, 
 		|| !PAFStruct->CurrentImageHeight
 		|| !PAFStruct->FrameNum
 		|| PAFStruct->CurrentImageColorBit != 1 && PAFStruct->CurrentImageColorBit != 2 && PAFStruct->CurrentImageColorBit != 8 && PAFStruct->CurrentImageColorBit != 16 && PAFStruct->CurrentImageColorBit != 18 && PAFStruct->CurrentImageColorBit != 24 && PAFStruct->CurrentImageColorBit != 32
-		|| (PAFStruct->pFrameOffset = (QUAD*)malloc(PAFStruct->FrameNum + 2), !PAFStruct->pFrameOffset))
+		|| (PAFStruct->pFrameOffset = (QUAD*)malloc(sizeof(QUAD)*(PAFStruct->FrameNum + 2)), !PAFStruct->pFrameOffset))
 	{
 		fclose((FILE*)PAFStruct->hFile);
 		if (!PAFStruct->CurrentImageWidth)
@@ -658,11 +658,10 @@ BOOL		AniPaf_DestroyRest(TAniPaf *PAFStruct)
 	{
 		free(PAFStruct->pCurrentImageData);
 	}
-	//until someone figures out why freeing pFrameOffset causes a heap corruption, this is commented out
-	//if (PAFStruct->pFrameOffset)
-	//{
-	//	free(PAFStruct->pFrameOffset);
-	//}
+	if (PAFStruct->pFrameOffset)
+	{
+		free(PAFStruct->pFrameOffset);
+	}
 	if (fclose((FILE*)PAFStruct->hFile)) //0 - OK, EOF - failure
 	{
 		DBGPRINT(PN_ERR_ERROR, "fclose(hAP->hFile) FAIL!!!");

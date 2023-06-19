@@ -36,10 +36,10 @@ namespace PAFTools {
 		~decode()
 		{
 			//DO NOT DELETE hPAF, otherwise error occurs...
-			//if (hPAF)
-			//{
-			//	delete hPAF;
-			//}
+			if (hPAF)
+			{
+				AniPaf_Destroy(hPAF);
+			}
 			if (components)
 			{
 				delete components;
