@@ -511,7 +511,7 @@ BOOL		AniPaf_Init(TAniPaf *PAFStruct, T_CSTR pcszFileName, QUAD Style, T_POS X, 
 		DBGPRINT(PN_ERR_INVALID_PARAM, "hAP = NULL!!!");
 		return FALSE;
 	}
-	PAFStruct->hFile = fopen((char*)pcszFileName, "rb");
+	fopen_s(&PAFStruct->hFile, (char*)pcszFileName, "rb");
 	if (!PAFStruct->hFile)
 	{
 		DBGPRINT(PN_ERR_INVALID_PARAM, "hAP->hFile = NULL!!!");
