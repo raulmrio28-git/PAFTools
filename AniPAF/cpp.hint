@@ -1,0 +1,2 @@
+#define ANIPAF_API __declspec(dllexport)
+#define ANIPAF_API __declspec(dllimport)
