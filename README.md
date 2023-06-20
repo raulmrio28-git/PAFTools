@@ -1,7 +1,7 @@
 # About this project
 This project is an attempt at (currently) decoding PAF images to be seen in Windows using .NET C++ CLR.
 
-Currently, this code only works properly with 8bpp and up. 1bpp and 2bpp decode and cleanup on exit or file open needs to be worked on.
+This code only works properly with all types of PAF files. 1bpp and 2bpp to ARGB conversion with padding handling should be worked on.
 
 This project also uses a DLL for manipulating PAF files (AniPAF.dll). This DLL is a reverse-engineer of the PDK Animation Format library used on certain LG phone firmwares along with fixes for proper results (includes those from https://github.com/Crawlerop/paftools), and is included in the project.
 # Building
