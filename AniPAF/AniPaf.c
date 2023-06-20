@@ -27,25 +27,39 @@ BYTE*		AniPaf_Decode1BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 	while (nTempOutSize < nInSize) {
 		nCountRun = 0;
 		bRleValue = *pInBuffer++;
-		switch(bRleValue & 0xC0)
+		switch (bRleValue & 0xC0)
 		{
-			case 0x00:
-				nCountRun = bRleValue >> 1;
-				bPixel = bRleValue & 1;
-				break;
-			case 0x40:
-				if (bRleValue & 0x20) {
-					nTempValue = *pInBuffer++ << 8 | *pInBuffer++; // Value is stored as big-endian 16-bit!
-					nCountRun = ((bRleValue & 0x1f) << 15) | nTempValue >> 1;
-					bPixel = nTempValue & 1;
+		case 0x00:
+			nCountRun = bRleValue >> 1;
+			bPixel = bRleValue & 1;
+			break;
+		case 0x40:
+			if (bRleValue & 0x20) {
+				nTempValue = *pInBuffer++ << 8 | *pInBuffer++; // Value is stored as big-endian 16-bit!
+				nCountRun = ((bRleValue & 0x1f) << 15) | nTempValue >> 1;
+				bPixel = nTempValue & 1;
+			}
+			else {
+				nTempValue = *pInBuffer++;
+				nCountRun = ((bRleValue & 0x1f) << 7) | nTempValue >> 1;
+				bPixel = nTempValue & 1;
+			}
+			break;
+		case 0x80:
+			for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral++) {
+				bCurrentByte |= ((bRleValue >> (5 - nCountLiteral)) & 1) << (7 - nBitCount);
+				nBitCount++;
+				if (nBitCount == 8) {
+					pResBuffer[nTempOutSize++] ^= bCurrentByte;
+					bCurrentByte = 0;
+					nBitCount = 0;
 				}
-				else {
-					nTempValue = *pInBuffer++;
-					nCountRun = ((bRleValue & 0x1f) << 7) | nTempValue >> 1;
-					bPixel = nTempValue & 1;
-				}
-				break;
-			case 0x80:
+			}
+			break;
+		case 0xc0:
+			nTempValue = *pInBuffer++;
+
+			if (!nTempValue) {
 				for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral++) {
 					bCurrentByte |= ((bRleValue >> (5 - nCountLiteral)) & 1) << (7 - nBitCount);
 					nBitCount++;
@@ -55,41 +69,27 @@ BYTE*		AniPaf_Decode1BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 						nBitCount = 0;
 					}
 				}
-				break;
-			case 0xc0:
-				nTempValue = *pInBuffer++;
+			}
+			else {
+				nTempValue |= (bRleValue & 0x3f) << 8;
 
-				if (!nTempValue){
-					for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral++) {
-						bCurrentByte |= ((bRleValue >> (5 - nCountLiteral)) & 1) << (7 - nBitCount);
-						nBitCount++;
-						if (nBitCount == 8) {
-							pResBuffer[nTempOutSize++] ^= bCurrentByte;
-							bCurrentByte = 0;
-							nBitCount = 0;
-						}
+				for (nCountLiteral = 0; nCountLiteral < 14; nCountLiteral++) {
+					bCurrentByte |= ((nTempValue >> (13 - nCountLiteral)) & 1) << (7 - nBitCount);
+					nBitCount++;
+					if (nBitCount == 8) {
+						pResBuffer[nTempOutSize++] ^= bCurrentByte;
+						bCurrentByte = 0;
+						nBitCount = 0;
 					}
 				}
-				else {
-					nTempValue |= (bRleValue & 0x3f) << 8;
-
-					for (nCountLiteral = 0; nCountLiteral < 14; nCountLiteral++) {
-						bCurrentByte |= ((nTempValue >> (13 - nCountLiteral)) & 1) << (7 - nBitCount);
-						nBitCount++;
-						if (nBitCount == 8) {
-							pResBuffer[nTempOutSize++] ^= bCurrentByte;
-							bCurrentByte = 0;
-							nBitCount = 0;
-						}
-					}
-				}
-				break;
+			}
+			break;
 		}
 
 		while (nCountRun--) {
 			bCurrentByte |= bPixel << (7 - nBitCount);
 			nBitCount++;
-			if (nBitCount == 8 && nTempValue < nInSize) {
+			if (nBitCount == 8) {
 				pResBuffer[nTempOutSize++] ^= bCurrentByte;
 				bCurrentByte = 0;
 				nBitCount = 0;
@@ -134,9 +134,9 @@ BYTE*		AniPaf_Decode2BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			}
 			break;
 		case 0x80:
-			for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral+=2) {
+			for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral += 2) {
 				bCurrentByte |= ((bRleValue >> (4 - nCountLiteral)) & 3) << (6 - nBitCount);
-				nBitCount+=2;
+				nBitCount += 2;
 				if (nBitCount == 8) {
 					pResBuffer[nTempOutSize++] ^= bCurrentByte;
 					bCurrentByte = 0;
@@ -148,9 +148,9 @@ BYTE*		AniPaf_Decode2BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			nTempValue = *pInBuffer++;
 
 			if (!nTempValue) {
-				for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral+=2) {
+				for (nCountLiteral = 0; nCountLiteral < 6; nCountLiteral += 2) {
 					bCurrentByte |= ((bRleValue >> (4 - nCountLiteral)) & 3) << (6 - nBitCount);
-					nBitCount+=2;
+					nBitCount += 2;
 					if (nBitCount == 8) {
 						pResBuffer[nTempOutSize++] ^= bCurrentByte;
 						bCurrentByte = 0;
@@ -161,9 +161,9 @@ BYTE*		AniPaf_Decode2BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			else {
 				nTempValue |= (bRleValue & 0x3f) << 8;
 
-				for (nCountLiteral = 0; nCountLiteral < 14; nCountLiteral+=2) {
+				for (nCountLiteral = 0; nCountLiteral < 14; nCountLiteral += 2) {
 					bCurrentByte |= ((nTempValue >> (12 - nCountLiteral)) & 3) << (7 - nBitCount);
-					nBitCount+=2;
+					nBitCount += 2;
 					if (nBitCount == 8) {
 						pResBuffer[nTempOutSize++] ^= bCurrentByte;
 						bCurrentByte = 0;
@@ -176,7 +176,7 @@ BYTE*		AniPaf_Decode2BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 
 		while (nCountRun--) {
 			bCurrentByte |= bPixel << (6 - nBitCount);
-			nBitCount+=2;
+			nBitCount += 2;
 			if (nBitCount == 8) {
 				pResBuffer[nTempOutSize++] ^= bCurrentByte;
 				bCurrentByte = 0;
@@ -810,6 +810,16 @@ BOOL		AniPaf_DrawFirstFrame(H_PAF hAP, BOOL bRefresh)
 			DBGPRINT(PN_ERR_INVALID_PARAM, "hAP->pCurrentImageData = NULL!!!");
 		return FALSE;
 	}
+	if (PafHandle->CurrentImageDataSize)
+	{
+		PafHandle->CurrentImageDataSize = 0;
+		for (i = 0; PafHandle->FrameNum > i; i++)
+		{
+			if ((PafHandle->pFrameOffset[i + 1] - PafHandle->pFrameOffset[i]) > PafHandle->CurrentImageDataSize)
+				PafHandle->CurrentImageDataSize = PafHandle->pFrameOffset[i + 1] - PafHandle->pFrameOffset[i];
+		}
+		goto LABEL_25;
+	}
 	switch (PafHandle->CurrentImageColorBit)
 	{
 	case 1:
@@ -833,6 +843,7 @@ BOOL		AniPaf_DrawFirstFrame(H_PAF hAP, BOOL bRefresh)
 		break;
 	}
 	PafHandle->CurrentImageDataSize = WidthBySize * PafHandle->CurrentImageHeight;
+LABEL_25:
 	PafHandle->CurrentFrameID = 0;
 	zeromem(PafHandle->pCurrentImageData, PafHandle->CurrentImageDataSize + 1);
 	AniPaf_DecodeFrame(PafHandle, 0);
@@ -917,4 +928,3 @@ BOOL		AniPaf_DrawPrevFrame(H_PAF hAP, BOOL bRefresh)
 		return AniPaf_DrawCurrentFrame(hAP, bRefresh);
 	return TRUE;
 }
-
