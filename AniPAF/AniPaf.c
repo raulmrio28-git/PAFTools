@@ -164,7 +164,7 @@ BYTE*		AniPaf_Decode2BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 				nTempValue |= (bRleValue & 0x3f) << 8;
 
 				for (nCountLiteral = 0; nCountLiteral < 14; nCountLiteral += 2) {
-					bCurrentByte |= ((nTempValue >> (12 - nCountLiteral)) & 3) << (7 - nBitCount);
+					bCurrentByte |= ((nTempValue >> (12 - nCountLiteral)) & 3) << (6 - nBitCount);
 					nBitCount += 2;
 					if (nBitCount == 8) {
 						pResBuffer[nTempOutSize++] ^= bCurrentByte;

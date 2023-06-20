@@ -225,8 +225,16 @@ namespace PAFTools {
 	private: System::Void fileButton_Click(System::Object^  sender, System::EventArgs^  e) {
 		if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 		{
+			this->InfoLabel->Text = "AniPAF data creation: ";
 			hPAF = (TAniPaf*)AniPaf_Create((T_CSTR)(void*)Marshal::StringToHGlobalAnsi(openFileDialog->FileName), 0, 0, 0, 0);
-			this->InfoLabel->Text = "";
+			if (!hPAF)
+			{
+				this->InfoLabel->Text += "FAILED";
+				MessageBox::Show("AniPAF data creation for file " + openFileDialog->FileName + " failed", "Failure", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			}
+			else {
+				this->InfoLabel->Text += "PASSED";
+			}
 		}
 	}
 			 /// <summary>
