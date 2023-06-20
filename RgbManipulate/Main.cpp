@@ -288,28 +288,16 @@ BOOL ConvertBufferToARGB32(BYTE *pBuff, QUAD *pOutBuff, QUAD nWidth, QUAD nHeigh
 {
 	int myCurrPixels = 0;
 	int x = 0, y = 0;
-	int padding = 0;
 	int currbit = 0;
+	int currwidth = 0;
 	if (!pBuff||!pOutBuff||!nWidth||!nHeight||!nBPP) return FALSE;
 	if (nBPP == 1) {
 		for (y = 0; y < nHeight; y++) {
-			for (x = 0; x < (nWidth/8); x++) {
-				BYTE val = pBuff[y * (nWidth / 8) + x];
-				for (currbit = 0; currbit < 8; currbit++)
-					pOutBuff[y * nWidth + (x * 8) + currbit] = Conv1BppPixTo32((val >> (7 - currbit)) & 1);
-
+			for (x = 0; x < nWidth; x+=8) {
+				BYTE val = pBuff[y * (nWidth>>3) + (x>>3)];
+				for (currbit = 0; currbit < 8 && (x+currbit) < nWidth; currbit++)
+					pOutBuff[y * nWidth + x + currbit] = Conv1BppPixTo32((val>>(7-currbit)) & 0x1);
 			}
-			padding = nWidth % 8;
-		}
-	}
-	else if (nBPP == 2) {
-		for (y = 0; y < nHeight; y++) {
-			for (x = 0; x < nWidth; x += 4 - padding) {
-				BYTE val = pBuff[y * (nWidth >> 2) + (x >> 2)];
-				for (currbit = 0; currbit < 6; currbit+=2)
-					pOutBuff[y * nWidth + (x * 4) + currbit] = Conv1BppPixTo32((val >> (4 - currbit)) & 3);
-			}
-			padding = nWidth % 4;
 		}
 	}
 	else if (nBPP == 8) {
