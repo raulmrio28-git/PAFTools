@@ -44,6 +44,7 @@ namespace PAFTools {
 	private: System::Windows::Forms::Label^  frameLbl;
 	private: System::Windows::Forms::NumericUpDown^  upDownFrames;
 	private: TAniPaf* hAP;
+	private: int prevframeno;
 	protected:
 
 	protected:
@@ -133,19 +134,13 @@ namespace PAFTools {
 		if (hAP)
 		{
 			BOOL bResult;
-			if (no == hAP->CurrentFrameID - 1)
-			{
-				bResult = AniPaf_DrawPrevFrame(hAP, 0);
-			}
-			else if (no == hAP->CurrentFrameID + 1)
-			{
-				bResult = AniPaf_DrawNextFrame(hAP, 0);
-			}
-			else if (no == 1)
-			{
+			if (no == 1)
 				bResult = AniPaf_DrawFirstFrame(hAP, 0);
-			}
-			hAP->CurrentFrameID = no;
+			else if (no > prevframeno)
+				bResult = AniPaf_DrawNextFrame(hAP, 0);
+			else if (no < prevframeno)
+				bResult = AniPaf_DrawPrevFrame(hAP, 0);
+			prevframeno = no;
 			if (bResult == FALSE)
 			{
 				MessageBox::Show("Frame " + System::Convert::ToString(no) + " decode failed", "Failure", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -176,7 +171,6 @@ namespace PAFTools {
 	}
 
 	private: System::Void showimg_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
-		AniPaf_DrawPrevFrame(hAP, 0); //Go back to draw initial frame
 	}
 	};
 }

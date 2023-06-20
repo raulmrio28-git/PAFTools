@@ -35,7 +35,8 @@ BYTE*		AniPaf_Decode1BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			break;
 		case 0x40:
 			if (bRleValue & 0x20) {
-				nTempValue = *pInBuffer++ << 8 | *pInBuffer++; // Value is stored as big-endian 16-bit!
+				nTempValue = *pInBuffer << 8 | pInBuffer[1];
+				pInBuffer += 2;
 				nCountRun = ((bRleValue & 0x1f) << 15) | nTempValue >> 1;
 				bPixel = nTempValue & 1;
 			}
@@ -123,7 +124,8 @@ BYTE*		AniPaf_Decode2BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			break;
 		case 0x40:
 			if (bRleValue & 0x20) {
-				nTempValue = *pInBuffer++ << 8 | *pInBuffer++; // Value is stored as big-endian 16-bit!
+				nTempValue = *pInBuffer << 8 | pInBuffer[1];
+				pInBuffer += 2;
 				nCountRun = ((bRleValue & 0x1f) << 14) | nTempValue >> 2;
 				bPixel = nTempValue & 3;
 			}
@@ -458,39 +460,36 @@ BOOL		AniPaf_DecodeFrame(TAniPaf *PafHandle, QUAD CurrentFrameID)
 			DBGPRINT(PN_ERR_INVALID_PARAM, "hAP->CurrentImageColorBit is not valid!!!");
 		return FALSE;
 	}
-	else
+	nBuffSize = PafHandle->pFrameOffset[CurrentFrameID + 1] - PafHandle->pFrameOffset[CurrentFrameID];
+	pTempBuffer = (BYTE*)malloc(nBuffSize);
+	fseek((FILE*)PafHandle->hFile, PafHandle->pFrameOffset[CurrentFrameID], SEEK_SET);
+	switch (PafHandle->CurrentImageColorBit)
 	{
-		nBuffSize = PafHandle->pFrameOffset[CurrentFrameID + 1] - PafHandle->pFrameOffset[CurrentFrameID];
-		pTempBuffer = (BYTE*)malloc(nBuffSize);
-		fseek((FILE*)PafHandle->hFile, PafHandle->pFrameOffset[CurrentFrameID], SEEK_SET);
-		switch (PafHandle->CurrentImageColorBit)
-		{
-		case 18:
-		case 32:
-			fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-			AniPaf_Decode32BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
-			break;
-		case 24:
-			fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-			AniPaf_Decode24BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
-			break;
-		case 16:
-			fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-			AniPaf_Decode16BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
-			break;
-		case 8:
-			fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-			AniPaf_Decode8BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
-			break;
-		case 2:
-			fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-			AniPaf_Decode2BitPafBuffer(pTemp, pTempBuffer, PafHandle->CurrentImageDataSize);
-			break;
-		case 1:
-			fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-			AniPaf_Decode1BitPafBuffer(pTemp, pTempBuffer, PafHandle->CurrentImageDataSize);
-			break;
-		}
+	case 18:
+	case 32:
+		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode32BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		break;
+	case 24:
+		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode24BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		break;
+	case 16:
+		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode16BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		break;
+	case 8:
+		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode8BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		break;
+	case 2:
+		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode2BitPafBuffer(pTemp, pTempBuffer, PafHandle->CurrentImageDataSize);
+		break;
+	case 1:
+		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode1BitPafBuffer(pTemp, pTempBuffer, PafHandle->CurrentImageDataSize);
+		break;
 	}
 	return TRUE;
 }
@@ -594,10 +593,10 @@ BOOL		AniPaf_Init(TAniPaf *PAFStruct, T_CSTR pcszFileName, QUAD Style, T_POS X, 
 	switch (PAFStruct->CurrentImageColorBit)
 	{
 	case 1:
-		WidthBySize = PAFStruct->CurrentImageWidth >> 3;
+		WidthBySize = (unsigned int)PAFStruct->CurrentImageWidth / 8;
 		break;
 	case 2:
-		WidthBySize = PAFStruct->CurrentImageWidth >> 2;
+		WidthBySize = (unsigned int)PAFStruct->CurrentImageWidth / 4;
 		break;
 	case 8:
 		WidthBySize = PAFStruct->CurrentImageWidth;
@@ -810,23 +809,13 @@ BOOL		AniPaf_DrawFirstFrame(H_PAF hAP, BOOL bRefresh)
 			DBGPRINT(PN_ERR_INVALID_PARAM, "hAP->pCurrentImageData = NULL!!!");
 		return FALSE;
 	}
-	if (PafHandle->CurrentImageDataSize)
-	{
-		PafHandle->CurrentImageDataSize = 0;
-		for (i = 0; PafHandle->FrameNum > i; i++)
-		{
-			if ((PafHandle->pFrameOffset[i + 1] - PafHandle->pFrameOffset[i]) > PafHandle->CurrentImageDataSize)
-				PafHandle->CurrentImageDataSize = PafHandle->pFrameOffset[i + 1] - PafHandle->pFrameOffset[i];
-		}
-		goto LABEL_25;
-	}
 	switch (PafHandle->CurrentImageColorBit)
 	{
 	case 1:
-		WidthBySize = PafHandle->CurrentImageWidth >> 3;
+		WidthBySize = PafHandle->CurrentImageWidth / 8;
 		break;
 	case 2:
-		WidthBySize = PafHandle->CurrentImageWidth >> 2;
+		WidthBySize = PafHandle->CurrentImageWidth / 4;
 		break;
 	case 8:
 		WidthBySize = PafHandle->CurrentImageWidth;
@@ -843,7 +832,6 @@ BOOL		AniPaf_DrawFirstFrame(H_PAF hAP, BOOL bRefresh)
 		break;
 	}
 	PafHandle->CurrentImageDataSize = WidthBySize * PafHandle->CurrentImageHeight;
-LABEL_25:
 	PafHandle->CurrentFrameID = 0;
 	zeromem(PafHandle->pCurrentImageData, PafHandle->CurrentImageDataSize + 1);
 	AniPaf_DecodeFrame(PafHandle, 0);
@@ -901,10 +889,10 @@ BOOL		AniPaf_DrawPrevFrame(H_PAF hAP, BOOL bRefresh)
 		switch (PafHandle->CurrentImageColorBit)
 		{
 		case 1:
-			WidthBySize = PafHandle->CurrentImageWidth >> 3;
+			WidthBySize = PafHandle->CurrentImageWidth / 8;
 			break;
 		case 2:
-			WidthBySize = PafHandle->CurrentImageWidth >> 2;
+			WidthBySize = PafHandle->CurrentImageWidth / 4;
 			break;
 		case 8:
 			WidthBySize = PafHandle->CurrentImageWidth;

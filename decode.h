@@ -192,11 +192,11 @@ namespace PAFTools {
 				else
 				{
 					this->InfoLabel->Text += "PASSED";
-					Bitmap^ bmp = gcnew Bitmap(AniPaf_GetWidth(hPAF), AniPaf_GetWidth(hPAF), Imaging::PixelFormat::Format32bppArgb);
-					System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, AniPaf_GetWidth(hPAF), AniPaf_GetWidth(hPAF));
+					Bitmap^ bmp = gcnew Bitmap(AniPaf_GetWidth(hPAF), AniPaf_GetHeight(hPAF), Imaging::PixelFormat::Format32bppArgb);
+					System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, AniPaf_GetWidth(hPAF), AniPaf_GetHeight(hPAF));
 					System::Drawing::Imaging::BitmapData^ bmpData = bmp->LockBits(rect, System::Drawing::Imaging::ImageLockMode::ReadWrite, bmp->PixelFormat);
 					IntPtr ptr = bmpData->Scan0;
-					int bytes = AniPaf_GetWidth(hPAF) * AniPaf_GetWidth(hPAF) * 4;
+					int bytes = AniPaf_GetWidth(hPAF) * AniPaf_GetHeight(hPAF) * 4;
 					ConvertBufferToARGB32(AniPaf_GetCurrentImage(hPAF), (QUAD*)((void*)ptr), AniPaf_GetWidth(hPAF), AniPaf_GetHeight(hPAF), AniPaf_GetColorNum(hPAF));
 					bmp->UnlockBits(bmpData);
 					String^ ext = System::IO::Path::GetExtension(saveFileDialog->FileName)->ToLower();
