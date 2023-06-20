@@ -36,7 +36,6 @@ BYTE*		AniPaf_Decode1BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 			case 0x40:
 				if (bRleValue & 0x20) {
 					nTempValue = *pInBuffer++ << 8 | *pInBuffer++; // Value is stored as big-endian 16-bit!
-					pInBuffer += 2;
 					nCountRun = ((bRleValue & 0x1f) << 15) | nTempValue >> 1;
 					bPixel = nTempValue & 1;
 				}
