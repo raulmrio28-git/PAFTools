@@ -593,10 +593,10 @@ BOOL		AniPaf_Init(TAniPaf *PAFStruct, T_CSTR pcszFileName, QUAD Style, T_POS X, 
 	switch (PAFStruct->CurrentImageColorBit)
 	{
 	case 1:
-		WidthBySize = PAFStruct->CurrentImageWidth >> 3;
+		WidthBySize = (PAFStruct->CurrentImageWidth >> 3) + ((PAFStruct->CurrentImageWidth % 8) != 0);
 		break;
 	case 2:
-		WidthBySize = PAFStruct->CurrentImageWidth >> 2;
+		WidthBySize = (PAFStruct->CurrentImageWidth >> 2) + ((PAFStruct->CurrentImageWidth % 4) != 0);
 		break;
 	case 8:
 		WidthBySize = PAFStruct->CurrentImageWidth;
@@ -812,10 +812,10 @@ BOOL		AniPaf_DrawFirstFrame(H_PAF hAP, BOOL bRefresh)
 	switch (PafHandle->CurrentImageColorBit)
 	{
 	case 1:
-		WidthBySize = PafHandle->CurrentImageWidth >> 3;
+		WidthBySize = (PafHandle->CurrentImageWidth >> 3) + ((PafHandle->CurrentImageWidth % 8) != 0);
 		break;
 	case 2:
-		WidthBySize = PafHandle->CurrentImageWidth >> 2;
+		WidthBySize = (PafHandle->CurrentImageWidth >> 2) + ((PafHandle->CurrentImageWidth % 4) != 0);
 		break;
 	case 8:
 		WidthBySize = PafHandle->CurrentImageWidth;
@@ -889,10 +889,10 @@ BOOL		AniPaf_DrawPrevFrame(H_PAF hAP, BOOL bRefresh)
 		switch (PafHandle->CurrentImageColorBit)
 		{
 		case 1:
-			WidthBySize = PafHandle->CurrentImageWidth >> 3;
+			WidthBySize = (PafHandle->CurrentImageWidth >> 3) + ((PafHandle->CurrentImageWidth % 8) != 0);
 			break;
 		case 2:
-			WidthBySize = PafHandle->CurrentImageWidth >> 2;
+			WidthBySize = (PafHandle->CurrentImageWidth >> 2) + ((PafHandle->CurrentImageWidth % 4) != 0);
 			break;
 		case 8:
 			WidthBySize = PafHandle->CurrentImageWidth;

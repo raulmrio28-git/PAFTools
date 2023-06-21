@@ -32,18 +32,20 @@ BOOL ConvertBufferToARGB32(BYTE *pBuff, QUAD *pOutBuff, QUAD nWidth, QUAD nHeigh
 	int currwidth = 0;
 	if (!pBuff||!pOutBuff||!nWidth||!nHeight||!nBPP) return FALSE;
 	if (nBPP == 1) {
+		currwidth = nWidth + (((nWidth % 8) != 0) * 8);
 		for (y = 0; y < nHeight; y++) {
-			for (x = 0; x < nWidth; x+=8) {
-				BYTE val = pBuff[y * (nWidth>>3) + (x>>3)];
+			for (x = 0; x < currwidth; x+=8) {
+				BYTE val = pBuff[y * (currwidth>>3) + (x>>3)];
 				for (currbit = 0; currbit < 8 && (x+currbit) < nWidth; currbit++)
 					pOutBuff[y * nWidth + x + currbit] = Conv1BppPixTo32((val>>(7-currbit)) & 0x1);
 			}
 		}
 	}
 	if (nBPP == 2) {
+		currwidth = nWidth + (((nWidth % 4) != 0) * 4);
 		for (y = 0; y < nHeight; y++) {
-			for (x = 0; x < nWidth; x += 4) {
-				BYTE val = pBuff[y * (nWidth >> 2) + (x >> 2)];
+			for (x = 0; x < currwidth; x += 4) {
+				BYTE val = pBuff[y * (currwidth >> 2) + (x >> 2)];
 				for (currbit = 0; currbit < 4 && (x + currbit) < nWidth; currbit++)
 					pOutBuff[y * nWidth + x + currbit] = Conv2BppPixTo32((val >> (6 - currbit*2)) & 0x3);
 			}
