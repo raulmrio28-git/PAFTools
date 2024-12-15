@@ -7,7 +7,7 @@
 #include "AniPAF.h"
 
 #define		DBGPRINT(Error, String)		printf_s("[E%04d] %s(%d) : %s", Error, __FILE__, __LINE__, String)
-
+#define myfread(h,b,s) fread(b, s, 1, h)
 QUAD swap_uint32(QUAD val)
 {
 	val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -241,8 +241,8 @@ BYTE*		AniPaf_Decode8BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSiz
 		}
 
 	}
-	*pnOutSize = nOutSize;
-	return pResBuffer;
+	*pnOutSize = nCurrSize - nInSize;
+	return pResBuffer+nOutSize;
 }
 
 BYTE*		AniPaf_Decode16BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSize, QUAD *pnOutSize)
@@ -301,8 +301,8 @@ BYTE*		AniPaf_Decode16BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 		}
 
 	}
-	*pnOutSize = nOutSize;
-	return pResBuffer;
+	*pnOutSize = nCurrSize - nInSize;
+	return pResBuffer+nOutSize;
 }
 
 BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSize, QUAD *pnOutSize)
@@ -367,8 +367,8 @@ BYTE*		AniPaf_Decode24BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 		}
 
 	}
-	*pnOutSize = nOutSize;
-	return pResBuffer;
+	*pnOutSize = nCurrSize - nInSize;
+	return pResBuffer+nOutSize;
 }
 
 BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSize, QUAD *pnOutSize)
@@ -438,16 +438,16 @@ BYTE*		AniPaf_Decode32BitPafBuffer(BYTE *pResBuffer, BYTE *pInBuffer, QUAD nInSi
 		}
 
 	}
-	*pnOutSize = nOutSize;
-	return pResBuffer;
+	*pnOutSize = nCurrSize - nInSize;
+	return pResBuffer+nOutSize;
 }
 
-BOOL		AniPaf_DecodeFrame(TAniPaf *PafHandle, QUAD CurrentFrameID)
+BOOL		AniPaf_DecodeFrame(TAniPaf* PafHandle, QUAD CurrentFrameID)
 {
 	QUAD nBuffSize; //compressed buffer size
 	QUAD nCurrLen = 0; //length of buffer read...
-	BYTE *pTempBuffer; //file read...
-	BYTE *pTemp = PafHandle->pCurrentImageData;
+	BYTE bTempBuffer[4104]; //file read...
+	BYTE* pTemp = PafHandle->pCurrentImageData;
 
 	DBGPRINT(PN_ERR_FIRST, "Frame decode!!!!!!!!");
 	if (!PafHandle || PafHandle->FrameNum <= CurrentFrameID || !PafHandle->CurrentImageColorBit)
@@ -461,34 +461,79 @@ BOOL		AniPaf_DecodeFrame(TAniPaf *PafHandle, QUAD CurrentFrameID)
 		return FALSE;
 	}
 	nBuffSize = PafHandle->pFrameOffset[CurrentFrameID + 1] - PafHandle->pFrameOffset[CurrentFrameID];
-	pTempBuffer = (BYTE*)malloc(nBuffSize);
 	fseek((FILE*)PafHandle->hFile, PafHandle->pFrameOffset[CurrentFrameID], SEEK_SET);
+	zeromem(bTempBuffer, 4104);
 	switch (PafHandle->CurrentImageColorBit)
 	{
 	case 18:
 	case 32:
-		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-		AniPaf_Decode32BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		nCurrLen = 0;
+		myfread(PafHandle->hFile, bTempBuffer, 6);
+		while (1)
+		{
+			PafHandle->hFile = PafHandle->hFile;
+			if (nBuffSize <= 4096)
+				break;
+			myfread(PafHandle->hFile, &bTempBuffer[6], 4096);
+			nBuffSize -= 4096;
+			pTemp = AniPaf_Decode32BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], 4096 - nCurrLen, &nCurrLen);
+			memcpy(bTempBuffer, &bTempBuffer[4096], 6u);
+		}
+		myfread(PafHandle->hFile, &bTempBuffer[6], nBuffSize);
+		AniPaf_Decode32BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], nBuffSize - nCurrLen, &nCurrLen);
 		break;
 	case 24:
-		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-		AniPaf_Decode24BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		nCurrLen = 0;
+		myfread(PafHandle->hFile, bTempBuffer, 6);
+		while (1)
+		{
+			if (nBuffSize <= 4096)
+				break;
+			myfread(PafHandle->hFile, &bTempBuffer[6], 4096);
+			nBuffSize -= 4096;
+			pTemp = AniPaf_Decode24BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], 4096 - nCurrLen, &nCurrLen);
+			memcpy(bTempBuffer, &bTempBuffer[4096], 6u);
+		}
+		myfread(PafHandle->hFile, &bTempBuffer[6], nBuffSize);
+		AniPaf_Decode24BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], nBuffSize - nCurrLen, &nCurrLen);
 		break;
 	case 16:
-		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-		AniPaf_Decode16BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		nCurrLen = 0;
+		myfread(PafHandle->hFile, bTempBuffer, 6);
+		while (1)
+		{
+			if (nBuffSize <= 4096)
+				break;
+			myfread(PafHandle->hFile, &bTempBuffer[6], 4096);
+			nBuffSize -= 4096;
+			pTemp = AniPaf_Decode16BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], 4096 - nCurrLen, &nCurrLen);
+			memcpy(bTempBuffer, &bTempBuffer[4096], 6u);
+		}
+		myfread(PafHandle->hFile, &bTempBuffer[6], nBuffSize);
+		AniPaf_Decode16BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], nBuffSize - nCurrLen, &nCurrLen);
 		break;
 	case 8:
-		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-		AniPaf_Decode8BitPafBuffer(pTemp, pTempBuffer, nBuffSize, &nCurrLen);
+		nCurrLen = 0;
+		myfread(PafHandle->hFile, bTempBuffer, 6);
+		while (1)
+		{
+			if (nBuffSize <= 4096)
+				break;
+			myfread(PafHandle->hFile, &bTempBuffer[6], 4096);
+			nBuffSize -= 4096;
+			pTemp = AniPaf_Decode8BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], 4096 - nCurrLen, &nCurrLen);
+			memcpy(bTempBuffer, &bTempBuffer[4096], 6u);
+		}
+		myfread(PafHandle->hFile, &bTempBuffer[6], nBuffSize);
+		AniPaf_Decode8BitPafBuffer(pTemp, &bTempBuffer[nCurrLen], nBuffSize - nCurrLen, &nCurrLen);
 		break;
 	case 2:
-		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-		AniPaf_Decode2BitPafBuffer(pTemp, pTempBuffer, PafHandle->CurrentImageDataSize);
+		fread(bTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode2BitPafBuffer(pTemp, bTempBuffer, PafHandle->CurrentImageDataSize);
 		break;
 	case 1:
-		fread(pTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
-		AniPaf_Decode1BitPafBuffer(pTemp, pTempBuffer, PafHandle->CurrentImageDataSize);
+		fread(bTempBuffer, nBuffSize, 1, (FILE*)PafHandle->hFile);
+		AniPaf_Decode1BitPafBuffer(pTemp, bTempBuffer, PafHandle->CurrentImageDataSize);
 		break;
 	}
 	return TRUE;
